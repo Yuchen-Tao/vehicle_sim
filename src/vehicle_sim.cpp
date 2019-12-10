@@ -1,6 +1,7 @@
 #include "vehicle_sim.h"
 
-Vehicle::Vehicle()
+Vehicle::Vehicle(double new_dt):
+dt(new_dt)
 {
   // parameter initialization
   delta_f = 0;
@@ -13,7 +14,7 @@ Vehicle::Vehicle()
   acc = 0;
   delta_f = 0;
 
-  time_step = 1;
+  time_step = new_dt;
   time_counter = 0;
 
   if ((SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) == -1))
@@ -38,11 +39,12 @@ void Vehicle::SetVideoMode()
 
 void Vehicle::update_state()
 {
-  beta = atan((l_r / (l_f + l_r)) * tan(delta_f));
+  beta = atan((l_r / (l_f + l_r)* tan(delta_f)));
   x = x + vel * cos(psi + beta) * dt;
   y = y + vel * sin(psi + beta) * dt;
-  psi = psi + (vel / l_f) * sin(beta) * dt;
-  vel = vel + acc * dt;
+  psi = psi + (vel / l_r) * sin(beta) * dt;
+  double force = b*abs(vel);
+  vel = vel + (acc - copysign(vel,force/mass)) * dt;
 }
 
 void Vehicle::create_message(ros::NodeHandle &n, ros::Publisher &msg_pub_)

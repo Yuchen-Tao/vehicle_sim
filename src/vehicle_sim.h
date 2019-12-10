@@ -13,7 +13,7 @@
 class Vehicle
 {
 public:
-  Vehicle();
+  Vehicle(double dt);
   inline virtual ~Vehicle()
   {
     /* Clean up */
@@ -45,9 +45,11 @@ private:
   double psi;
   double psi_der;
   // distancefrom the center of the mass of the vehicle to the front axle
-  double l_f = 130;
+  double l_f = 1.30;
   // distancefrom the center of the mass of the vehicle to the rear axle
-  double l_r = 140;
+  double l_r = 1.40;
+  double b = 0.1;
+  double mass = 1400;
 
   double dt = 1;
   double acc;
