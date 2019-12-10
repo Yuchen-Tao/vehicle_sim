@@ -65,9 +65,12 @@ void Vehicle::create_message(ros::NodeHandle &n, ros::Publisher &msg_pub_)
   double cr = cos(0 * 0.5);
   double sr = sin(0 * 0.5);
 
-  automated_driving_msgs::ObjectState msg;
   msg.header.stamp = ros::Time::now();
-  msg.header.frame_id = "/world";
+  msg.header.frame_id = "map";
+  msg_class.classification = 4; // CAR
+  msg_class.probability = 1;
+  msg.classification.classes_with_probabilities.emplace_back(msg_class);
+  msg.motion_state.header.frame_id = "map";
   msg.motion_state.pose.pose.position.x = x;
   msg.motion_state.pose.pose.position.y = y;
   msg.motion_state.pose.pose.position.z = 0;
@@ -80,7 +83,12 @@ void Vehicle::create_message(ros::NodeHandle &n, ros::Publisher &msg_pub_)
   msg.motion_state.twist.twist.linear.x = vel * cos(psi + beta);
   msg.motion_state.twist.twist.linear.y = vel * sin(psi + beta);
   msg.motion_state.twist.twist.linear.z = 0;
-  msg_pub_.publish(msg);
+
+  msg_array.header.stamp = ros::Time::now();
+  msg_array.header.frame_id = "map";
+  msg_array.objects.emplace_back(msg);
+  msg_pub_.publish(msg_array);
+  // msg_pub_.publish(msg);
 }
 
 void Vehicle::keyboard_control(ros::NodeHandle &n, ros::Publisher &msg_pub_)
@@ -102,6 +110,8 @@ void Vehicle::keyboard_control(ros::NodeHandle &n, ros::Publisher &msg_pub_)
     {
       update_state();
       create_message(n, msg_pub_);
+      msg_array.objects.clear();
+      msg.classification.classes_with_probabilities.clear();
       time_counter = 0;
     }
     // The keyboard controls delta_f and acceleration by left/right/up/down,
@@ -124,11 +134,11 @@ void Vehicle::keyboard_control(ros::NodeHandle &n, ros::Publisher &msg_pub_)
           ROS_INFO("%s", "turn right");
           break;
         case SDLK_UP:
-          acc += 0.5;
+          acc += 0.1;
           ROS_INFO("%s", "acceleration up");
           break;
         case SDLK_DOWN:
-          acc -= 0.5;
+          acc -= 0.1;
           ROS_INFO("%s", "acceleration down");
           break;
         case SDLK_ESCAPE:

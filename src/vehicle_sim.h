@@ -1,6 +1,8 @@
 #include "std_msgs/String.h"
 #include <SDL/SDL.h>
 #include <automated_driving_msgs/ObjectState.h>
+#include <automated_driving_msgs/ObjectStateArray.h>
+#include <automated_driving_msgs/ClassWithProbability.h>
 #include <iostream>
 #include <math.h>
 #include <ros/ros.h>
@@ -8,10 +10,12 @@
 #include <string>
 #include <time.h>
 
-class Vehicle {
+class Vehicle
+{
 public:
   Vehicle();
-  inline virtual ~Vehicle() {
+  inline virtual ~Vehicle()
+  {
     /* Clean up */
     SDL_Quit();
     exit(0);
@@ -50,4 +54,8 @@ private:
 
   double time_step;
   double time_counter;
+
+  automated_driving_msgs::ObjectState msg;
+  automated_driving_msgs::ObjectStateArray msg_array;
+  automated_driving_msgs::ClassWithProbability msg_class;
 };
