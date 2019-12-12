@@ -1,7 +1,6 @@
 #include "vehicle_sim.h"
 
-Vehicle::Vehicle(double new_dt):
-dt(new_dt)
+Vehicle::Vehicle()
 {
   // parameter initialization
   delta_f = 0;
@@ -14,37 +13,21 @@ dt(new_dt)
   acc = 0;
   delta_f = 0;
 
-  time_step = new_dt;
   time_counter = 0;
-
-  if ((SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) == -1))
-  {
-    printf("Could not initialize SDL: %s.\n", SDL_GetError());
-    exit(-1);
-  }
-  std::cout << "SDL initialized" << std::endl;
-  SDL_EnableUNICODE(1);
-}
-
-void Vehicle::SetVideoMode()
-{
-  /* Set a video mode */
-  if (!SDL_SetVideoMode(320, 200, 0, 0))
-  {
-    fprintf(stderr, "Could not set video mode: %s\n", SDL_GetError());
-    SDL_Quit();
-    exit(-1);
-  }
+  SDL_Init(SDL_INIT_VIDEO);
+  SDL_Window *window = SDL_CreateWindow("SDL2 Keyboard/Mouse events",
+                                        SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 200, 200, 0);
+  SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, 0);
 }
 
 void Vehicle::update_state()
 {
-  beta = atan((l_r / (l_f + l_r)* tan(delta_f)));
+  beta = atan((l_r / (l_f + l_r) * tan(delta_f)));
   x = x + vel * cos(psi + beta) * dt;
   y = y + vel * sin(psi + beta) * dt;
   psi = psi + (vel / l_r) * sin(beta) * dt;
-  double force = b*abs(vel);
-  vel = vel + (acc - copysign(vel,force/mass)) * dt;
+  double force = b * abs(vel);
+  vel = vel + (acc - copysign(force / mass, vel)) * dt;
 }
 
 void Vehicle::create_message(ros::NodeHandle &n, ros::Publisher &msg_pub_)
@@ -102,13 +85,16 @@ void Vehicle::keyboard_control(ros::NodeHandle &n, ros::Publisher &msg_pub_)
   clock_t this_time = clock();
   clock_t last_time = this_time;
 
+  double angle_to_rad = M_PI / 180;
+
   while (!quit)
   {
     this_time = clock();
     time_counter += (double)(this_time - last_time);
     last_time = this_time;
+
     // Update the state every dt=1 second
-    if (time_counter > time_step * CLOCKS_PER_SEC)
+    if (time_counter > dt * CLOCKS_PER_SEC)
     {
       update_state();
       create_message(n, msg_pub_);
@@ -118,6 +104,21 @@ void Vehicle::keyboard_control(ros::NodeHandle &n, ros::Publisher &msg_pub_)
     }
     // The keyboard controls delta_f and acceleration by left/right/up/down,
     // press Esc to quit the simulation.
+
+    const Uint8 *state = SDL_GetKeyboardState(NULL);
+    if (state[SDL_SCANCODE_UP] && acc < 10)
+      acc += 0.05;
+    else if (state[SDL_SCANCODE_DOWN] && acc > -10)
+      acc -= 0.05;
+    else
+      acc = 0;
+    if (state[SDL_SCANCODE_LEFT] && delta_f < 70 * angle_to_rad)
+      delta_f += 1.0 * angle_to_rad;
+    else if (state[SDL_SCANCODE_RIGHT] && delta_f > -70 * angle_to_rad)
+      delta_f -= 1.0 * angle_to_rad;
+    else
+      delta_f = 0;
+
     while (SDL_PollEvent(&event))
     {
       switch (event.type)
@@ -127,22 +128,24 @@ void Vehicle::keyboard_control(ros::NodeHandle &n, ros::Publisher &msg_pub_)
         // Check the SDLKey values and move change the coords
         switch (event.key.keysym.sym)
         {
-        case SDLK_LEFT:
-          delta_f += 5.0 * M_PI / 180;
-          ROS_INFO("%s", "turn left");
-          break;
-        case SDLK_RIGHT:
-          delta_f -= 5.0 * M_PI / 180;
-          ROS_INFO("%s", "turn right");
-          break;
-        case SDLK_UP:
-          acc += 0.1;
-          ROS_INFO("%s", "acceleration up");
-          break;
-        case SDLK_DOWN:
-          acc -= 0.1;
-          ROS_INFO("%s", "acceleration down");
-          break;
+        // case SDLK_LEFT:
+        //   if (delta_f < 70 * angle_to_rad)
+        //     delta_f += 5.0 * angle_to_rad;
+        //   ROS_INFO("%s", "turn left");
+        //   break;
+        // case SDLK_RIGHT:
+        //   if (delta_f > -70 * angle_to_rad)
+        //     delta_f -= 5.0 * angle_to_rad;
+        //   ROS_INFO("%s", "turn right");
+        //   break;
+        // case SDLK_UP:
+        //   acc += 0.5;
+        //   ROS_INFO("%s", "acceleration up");
+        //   break;
+        // case SDLK_DOWN:
+        //   acc -= 0.5;
+        //   ROS_INFO("%s", "acceleration down");
+        //   break;
         case SDLK_ESCAPE:
           ROS_INFO("%s", "quit simulation");
           quit = 1;
@@ -152,6 +155,30 @@ void Vehicle::keyboard_control(ros::NodeHandle &n, ros::Publisher &msg_pub_)
         }
         break;
       //Click the quit botton
+      // case SDL_KEYUP:
+      //   switch (event.key.keysym.sym)
+      //   {
+      //   case SDLK_LEFT:
+      //     if (delta_f > 0)
+      //       delta_f = 0;
+      //     break;
+      //   case SDLK_RIGHT:
+      //     if (delta_f < 0)
+      //       delta_f = 0;
+      //     break;
+      //   case SDLK_UP:
+      //     if (acc > 0)
+      //       acc = 0;
+      //     break;
+      //   case SDLK_DOWN:
+      //     if (acc < 0)
+      //       acc = 0;
+      //     break;
+      //   default:
+      //     break;
+      //   }
+      //   break;
+      //   break;
       case SDL_QUIT:
         ROS_INFO("%s", "quit simulation");
         quit = 1;

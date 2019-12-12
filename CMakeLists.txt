@@ -13,7 +13,10 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   automated_driving_msgs
 )
-find_package(SDL REQUIRED)
+find_package(SDL2 REQUIRED)
+
+# PKG_SEARCH_MODULE(SDL2IMAGE REQUIRED SDL2_image>=2.0.0)
+
 
 catkin_package(
  INCLUDE_DIRS include
@@ -25,6 +28,7 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
+  ${SDL2_INCLUDE_DIRS}
 )
 
 add_library(vehicle_sim_lib 
@@ -37,5 +41,5 @@ add_dependencies(vehicle_sim_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_E
 
 target_link_libraries(vehicle_sim_node vehicle_sim_lib
   ${catkin_LIBRARIES}
-  ${SDL_LIBRARY}
+  ${SDL2_LIBRARIES}
 )

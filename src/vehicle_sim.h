@@ -1,5 +1,5 @@
 #include "std_msgs/String.h"
-#include <SDL/SDL.h>
+#include <SDL2/SDL.h>
 #include <automated_driving_msgs/ObjectState.h>
 #include <automated_driving_msgs/ObjectStateArray.h>
 #include <automated_driving_msgs/ClassWithProbability.h>
@@ -13,7 +13,7 @@
 class Vehicle
 {
 public:
-  Vehicle(double dt);
+  Vehicle();
   inline virtual ~Vehicle()
   {
     /* Clean up */
@@ -48,13 +48,13 @@ private:
   double l_f = 1.30;
   // distancefrom the center of the mass of the vehicle to the rear axle
   double l_r = 1.40;
-  double b = 0.1;
+  double b = 700;
   double mass = 1400;
 
-  double dt = 1;
+  double dt = 0.02;
   double acc;
 
-  double time_step;
+  // double time_step;
   double time_counter;
 
   automated_driving_msgs::ObjectState msg;
