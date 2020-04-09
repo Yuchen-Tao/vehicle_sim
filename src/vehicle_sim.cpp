@@ -55,8 +55,10 @@ void Vehicle::create_message(ros::NodeHandle& n, ros::Publisher& msg_pub_) {
     msg.motion_state.pose.pose.orientation.y = sy * cp * sr + cy * sp * cr;
     msg.motion_state.pose.pose.orientation.z = sy * cp * cr - cy * sp * sr;
 
-    msg.motion_state.twist.twist.linear.x = vel * cos(psi + beta);
-    msg.motion_state.twist.twist.linear.y = vel * sin(psi + beta);
+    // Provide velocity in vehicle frame
+    msg.motion_state.child_frame_id = "vehicle";
+    msg.motion_state.twist.twist.linear.x = vel;
+    msg.motion_state.twist.twist.linear.y = 0;
     msg.motion_state.twist.twist.linear.z = 0;
 
     msg_array.header.stamp = ros::Time::now();
